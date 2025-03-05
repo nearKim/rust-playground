@@ -1,5 +1,7 @@
 use crate::task::Task;
 
+const TODO_FILE: &str = "data/todo.json";
+
 pub fn save_tasks(tasks: &[Task]) -> Result<(), String> {
     todo!("Implement task saving to JSON")
 }
