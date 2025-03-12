@@ -1,7 +1,7 @@
 #[derive(PartialEq, Debug)]
 pub enum Command {
     Add(String, Option<String>),
-    List(Option<bool>),
+    List(Option<String>),
     Complete(u32),
     Remove(u32),
     Exit,
@@ -50,14 +50,14 @@ mod tests {
     fn test_parse_list_command_pending() {
         let input = "list pending";
         let command = parse_command(input).expect("Failed to parse list command");
-        assert_eq!(command, Command::List(Some(false)));
+        assert_eq!(command, Command::List(Some("pending".to_string())));
     }
 
     #[test]
     fn test_parse_list_command_completed() {
         let input = "list completed";
         let command = parse_command(input).expect("Failed to parse list command");
-        assert_eq!(command, Command::List(Some(true)));
+        assert_eq!(command, Command::List(Some("completed".to_string())));
     }
 
     #[test]
