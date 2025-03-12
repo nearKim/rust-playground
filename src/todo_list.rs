@@ -8,19 +8,32 @@ pub struct ToDoList {
 
 impl ToDoList {
     pub fn new() -> Self {
-        todo!("Initialize an empty ToDoList")
+        Self {
+            tasks: Vec::new(),
+            next_id: 0,
+        }
     }
 
     pub fn load() -> Result<Self, String> {
-        todo!("Load ToDoList from storage")
+        load_tasks().map(|tasks| {
+            let next_id = tasks.last().map(|last| last.id + 1).unwrap_or(0);
+            Self { tasks, next_id }
+        })
     }
 
     pub fn save(&self) -> Result<(), String> {
-        todo!("Save ToDoList to storage")
+        // &self.tasks는 &Vec<Task> 타입이지만, Rust의 "deref coercion" 때문에 slice reference에 넘길 수 있음.
+        // Vec<Task> 는 Deref trait을 구현하므로, [Task]로 deref 될 수 있음.
+        // 내부적으로 알아서 deref 연산 &(*vec)을 수행
+        // Rust의 타입 시스템은 T가 Deref<Target = U> 를 구현할 경우, &T가 &U로 coerce 되는 것을 허용함
+        // The purpose of Deref coercion is to make smart pointer types, like Box, behave as much like the underlying value as possible.
+        // Using a Box<Chessboard> is mostly just like using a plain Chessboard, thanks to Deref.
+        save_tasks(&self.tasks)
     }
 
     pub fn add_task(&mut self, description: String, due_date: Option<String>) {
-        todo!("Add a new task")
+        let new_task = Task::new(self.next_id, description, due_date);
+        self.tasks.push(new_task);
     }
 
     pub fn list_tasks(&self, filter: Option<bool>) -> Vec<&Task> {

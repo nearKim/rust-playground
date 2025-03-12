@@ -8,6 +8,17 @@ pub struct Task {
     pub due_date: Option<String>,
 }
 
+impl Task {
+    pub fn new(id: u32, description: String, due_date: Option<String>) -> Self {
+        Self {
+            id,
+            description,
+            due_date,
+            completed: false,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
