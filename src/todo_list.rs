@@ -31,12 +31,11 @@ impl ToDoList {
         save_tasks(&self.tasks)
     }
 
-    pub fn add_task(&mut self, description: String, due_date: Option<String>) {
-        let new_task = Task::new(self.next_id, description, due_date);
-        self.tasks.push(new_task);
+    pub fn add_task(&mut self, description: String, due_date: Option<String>) -> u32 {
+        todo!("Add a new task")
     }
 
-    pub fn list_tasks(&self, filter: Option<bool>) -> Vec<&Task> {
+    pub fn list_tasks(&self, filter: Option<String>) -> Vec<&Task> {
         todo!("List tasks with optional filter")
     }
 
@@ -56,59 +55,63 @@ mod tests {
     #[test]
     fn test_add_task_valid() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Task 1".to_string(), None);
-        assert_eq!(todo_list.tasks.len(), 1);
-        assert_eq!(todo_list.tasks[0].description, "Task 1");
-        assert_eq!(todo_list.tasks[0].id, 1); // Assuming IDs start at 1
+        let id = todo_list.add_task("Task 1".to_string(), None);
+        let tasks = todo_list.list_tasks(None);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].description, "Task 1");
+        assert_eq!(tasks[0].id, id); // ID matches the one returned by add_task
     }
 
     #[test]
     fn test_add_task_empty_description() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("".to_string(), None);
-        assert_eq!(todo_list.tasks.len(), 1);
-        assert_eq!(todo_list.tasks[0].description, ""); // Edge case: allowed or rejected?
+        let id = todo_list.add_task("".to_string(), None);
+        let tasks = todo_list.list_tasks(None);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].description, ""); // Tests behavior with empty description
     }
 
     #[test]
     fn test_complete_task_valid() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Task to complete".to_string(), None);
-        let id = todo_list.tasks[0].id;
+        let id = todo_list.add_task("Task to complete".to_string(), None);
         todo_list.complete_task(id);
-        assert!(todo_list.tasks[0].completed);
+        let tasks = todo_list.list_tasks(None);
+        assert!(tasks[0].completed);
     }
 
     #[test]
     fn test_complete_task_nonexistent() {
         let mut todo_list = ToDoList::new();
-        todo_list.complete_task(999); // Should not panic, just do nothing or log
-        assert!(todo_list.tasks.is_empty());
+        todo_list.complete_task(999); // Should not panic, just do nothing
+        let tasks = todo_list.list_tasks(None);
+        assert!(tasks.is_empty());
     }
 
     #[test]
     fn test_remove_task_valid() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Task to remove".to_string(), None);
-        let id = todo_list.tasks[0].id;
+        let id = todo_list.add_task("Task to remove".to_string(), None);
         todo_list.remove_task(id);
-        assert!(todo_list.tasks.is_empty());
+        let tasks = todo_list.list_tasks(None);
+        assert!(tasks.is_empty());
     }
 
     #[test]
     fn test_remove_task_nonexistent() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Remaining task".to_string(), None);
+        let id = todo_list.add_task("Remaining task".to_string(), None);
         todo_list.remove_task(999); // Should not affect existing tasks
-        assert_eq!(todo_list.tasks.len(), 1);
+        let tasks = todo_list.list_tasks(None);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].id, id);
     }
 
     #[test]
     fn test_list_tasks_all() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Task 1".to_string(), None);
-        todo_list.add_task("Task 2".to_string(), None);
-        todo_list.complete_task(todo_list.tasks[1].id);
+        let _id1 = todo_list.add_task("Task 1".to_string(), None);
+        let _id2 = todo_list.add_task("Task 2".to_string(), None);
         let tasks = todo_list.list_tasks(None);
         assert_eq!(tasks.len(), 2);
     }
@@ -116,22 +119,24 @@ mod tests {
     #[test]
     fn test_list_tasks_pending_only() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Pending".to_string(), None);
-        todo_list.add_task("Completed".to_string(), None);
-        todo_list.complete_task(todo_list.tasks[1].id);
-        let pending = todo_list.list_tasks(Some(false));
+        let id1 = todo_list.add_task("Pending".to_string(), None);
+        let id2 = todo_list.add_task("Completed".to_string(), None);
+        todo_list.complete_task(id2);
+        let pending = todo_list.list_tasks(Some("pending".to_string()));
         assert_eq!(pending.len(), 1);
+        assert_eq!(pending[0].id, id1);
         assert_eq!(pending[0].description, "Pending");
     }
 
     #[test]
     fn test_list_tasks_completed_only() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task("Pending".to_string(), None);
-        todo_list.add_task("Completed".to_string(), None);
-        todo_list.complete_task(todo_list.tasks[1].id);
-        let completed = todo_list.list_tasks(Some(true));
+        let _id1 = todo_list.add_task("Pending".to_string(), None);
+        let id2 = todo_list.add_task("Completed".to_string(), None);
+        todo_list.complete_task(id2);
+        let completed = todo_list.list_tasks(Some("completed".to_string()));
         assert_eq!(completed.len(), 1);
+        assert_eq!(completed[0].id, id2);
         assert_eq!(completed[0].description, "Completed");
     }
 
@@ -145,22 +150,23 @@ mod tests {
     #[test]
     fn test_save_and_load_success() {
         let mut todo_list = ToDoList::new();
-        todo_list.add_task(
+        let id = todo_list.add_task(
             "Persistent task".to_string(),
             Some("2023-12-01".to_string()),
         );
         todo_list.save().expect("Failed to save tasks");
         let loaded = ToDoList::load().expect("Failed to load tasks");
-        assert_eq!(loaded.tasks.len(), 1);
-        assert_eq!(loaded.tasks[0].description, "Persistent task");
+        let tasks = loaded.list_tasks(None);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].id, id);
+        assert_eq!(tasks[0].description, "Persistent task");
     }
 
     #[test]
     fn test_load_nonexistent_file() {
-        // Ensure no tasks.json exists before loading
-        std::fs::remove_file("tasks.json").ok();
+        std::fs::remove_file("tasks.json").ok(); // Remove file if it exists
         let result = ToDoList::load();
-        assert!(result.is_err()); // Should return error for missing file
+        assert!(result.is_err()); // Should fail when no file exists
     }
 
     #[test]
@@ -168,6 +174,7 @@ mod tests {
         let todo_list = ToDoList::new();
         todo_list.save().expect("Failed to save empty list");
         let loaded = ToDoList::load().expect("Failed to load empty list");
-        assert!(loaded.tasks.is_empty());
+        let tasks = loaded.list_tasks(None);
+        assert!(tasks.is_empty());
     }
 }
