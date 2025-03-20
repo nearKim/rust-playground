@@ -2,8 +2,8 @@ use crate::storage::{load_tasks, save_tasks};
 use crate::task::Task;
 
 pub struct ToDoList {
-    tasks: Vec<Task>,
-    next_id: u32,
+    pub tasks: Vec<Task>,
+    pub next_id: u32,
 }
 
 impl ToDoList {
