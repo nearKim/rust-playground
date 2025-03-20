@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod integration_tests {
     use std::fs;
-    use crate::todo_list::ToDoList;
-    use crate::commands::parse_command;
+    use todo_list::commands::{parse_command, Command};
+    use todo_list::todo_list::ToDoList;
 
     #[test]
     fn test_full_workflow() {
