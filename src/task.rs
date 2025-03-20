@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::fmt::Formatter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Task {
@@ -6,6 +8,12 @@ pub struct Task {
     pub description: String,
     pub completed: bool,
     pub due_date: Option<String>,
+}
+
+impl fmt::Display for Task {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 impl Task {
