@@ -1,5 +1,6 @@
 use crate::storage::{load_tasks, save_tasks};
 use crate::task::Task;
+use std::io;
 
 pub struct ToDoList {
     pub tasks: Vec<Task>,
@@ -8,11 +9,17 @@ pub struct ToDoList {
 
 impl ToDoList {
     pub fn new() -> Self {
-        todo!("Initialize an empty ToDoList")
+        ToDoList {
+            tasks: Vec::new(),
+            next_id: 0,
+        }
     }
 
     pub fn load() -> Result<Self, String> {
-        todo!("Load ToDoList from storage")
+        println!("Load ToDoList from storage");
+        let contents = load_tasks();
+        let todolist = ToDoList::new();
+        Ok(todolist)
     }
 
     pub fn save(&self) -> Result<(), String> {

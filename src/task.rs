@@ -10,9 +10,14 @@ pub struct Task {
     pub due_date: Option<String>,
 }
 
-impl fmt::Display for Task {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        todo!()
+impl Task {
+    pub fn new() -> Self {
+        Task {
+            id: 0,
+            description: String::new(),
+            completed: false,
+            due_date: None,
+        }
     }
 }
 
