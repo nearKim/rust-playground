@@ -8,7 +8,66 @@ pub enum Command {
 }
 
 pub fn parse_command(input: &str) -> Result<Command, String> {
-    todo!("Parse user input into a Command")
+    let cmd_type = input.split_whitespace().next().unwrap().to_lowercase();
+    let cmd_content_list: Vec<_> = 
+        input.split_whitespace()
+            .skip(1)
+            .take_while(|word| !word.contains("--"))
+            .map(|word| word.to_string())
+            .collect();
+    let cmd_content = cmd_content_list.join(" ");
+    let cmd_sub_list: Vec<_> = 
+        input.split_whitespace().rev()
+            .take_while(|word| !word.contains("--"))
+            .map(|word| word.to_string())
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect();
+    let cmd_sub = cmd_sub_list.join(" ");
+
+    match cmd_type.as_str() {
+        "add" => {
+            if (cmd_content.is_empty()) {
+                return Err("".to_string());
+            }
+            else {
+                return Ok(Command::Add(cmd_content, Some(cmd_sub)));
+            }
+        }
+
+        "list" => {
+            if !cmd_content.is_empty() {
+                if (cmd_content != "completed") && (cmd_content != "pending") {
+                    return Err("Invalid list filter".to_string());
+                }
+            }
+            return Ok(Command::List(Some(cmd_content)));
+        }
+
+        "complete" => {
+            let id = cmd_content.parse::<u32>()
+                .map_err(|_| "Invalid number".to_string())?;
+            return Ok(Command::Complete(id));
+        }
+
+        "remove" => {
+            let id = cmd_content.parse::<u32>()
+                .map_err(|_| "Invalid number".to_string())?;
+            return Ok(Command::Remove(id));
+        }
+
+        "exit" => {
+            return Ok(Command::Exit);
+        }
+
+        _ => {
+            println!("Command No match");
+            return Err("".to_string());
+        }
+    }
+
+    return Ok(Command::Complete(0));
 }
 
 #[cfg(test)]

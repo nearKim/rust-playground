@@ -1,10 +1,15 @@
 use crate::storage::{load_tasks, save_tasks};
 use crate::task::Task;
 use std::io;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 pub struct ToDoList {
     pub tasks: Vec<Task>,
     pub next_id: u32,
+    pub synced: Arc<AtomicBool>,
 }
 
 impl ToDoList {
@@ -12,34 +17,88 @@ impl ToDoList {
         ToDoList {
             tasks: Vec::new(),
             next_id: 0,
+            synced: Arc::new(AtomicBool::new(true)),
         }
     }
 
     pub fn load() -> Result<Self, String> {
         println!("Load ToDoList from storage");
-        let contents = load_tasks();
-        let todolist = ToDoList::new();
+        let tasks = load_tasks()?;
+        let mut todolist = ToDoList::new();
+        for task in tasks {
+            todolist.tasks.push(task);
+        }
+        todolist.next_id = (todolist.tasks.len() + 1) as u32;
         Ok(todolist)
     }
 
     pub fn save(&self) -> Result<(), String> {
-        todo!("Save ToDoList to storage")
+        self.synced.store(false, Ordering::SeqCst);
+        println!("Request Save ToDoList to storage, synced: {}", self.synced.load(Ordering::SeqCst));
+        Ok(())
     }
 
     pub fn add_task(&mut self, description: String, due_date: Option<String>) -> u32 {
-        todo!("Add a new task")
+        println!("Add a new task");
+        let mut task = Task::new();
+        task.id = self.next_id; 
+        self.next_id += 1;
+        task.description = description;
+        task.due_date = due_date;
+
+        println!("Task added with ID {}", task.id);
+        self.tasks.push(task);
+        return 0;
     }
 
-    pub fn list_tasks(&self, filter: Option<String>) -> Vec<&Task> {
-        todo!("List tasks with optional filter")
+    pub fn list_tasks<'a>(&'a self, filter: Option<String>) -> Vec<&'a Task> {
+        match filter {
+            Some(f) => {
+                if f.is_empty() {
+                    let task_refs: Vec<&Task> = self.tasks.iter().collect();
+                    return task_refs;
+                }
+                else {
+                    let mut filtered = Vec::new();
+                    for task in &self.tasks {
+                        if task.completed == (f == "completed") {
+                            filtered.push(task);
+                        }
+                    }
+                    if filtered.is_empty() {
+                        println!("No {} tasks", f);
+                    }
+                    return filtered;
+                }                   
+            }
+            None => {
+                Vec::new()
+            }
+        }
     }
 
     pub fn complete_task(&mut self, id: u32) {
-        todo!("Mark a task as completed")
+        let mut found = false;
+        for task in &mut self.tasks {
+            if task.id == id {
+                task.completed = true;
+                println!("Task {} completed", id);
+                found = true;
+            }
+        }
+        if !found {
+            println!("Task not found");
+        }
     }
 
     pub fn remove_task(&mut self, id: u32) {
-        todo!("Remove a task")
+        let mut found = false;
+        if let Some(idx) = self.tasks.iter().position(|task| task.id == id) {
+            self.tasks.remove(idx);
+        }
+        else {
+            println!("Task not found");
+        }
     }
 }
 
