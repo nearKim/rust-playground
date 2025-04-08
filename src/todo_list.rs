@@ -78,6 +78,7 @@ impl ToDoList {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::storage::TODO_FILE;
 
     #[test]
     fn test_add_task_valid() {
@@ -191,7 +192,7 @@ mod tests {
 
     #[test]
     fn test_load_nonexistent_file() {
-        std::fs::remove_file("tasks.json").ok(); // Remove file if it exists
+        std::fs::remove_file(TODO_FILE).ok(); // Remove file if it exists
         let result = ToDoList::load();
         assert!(result.is_err()); // Should fail when no file exists
     }
