@@ -12,7 +12,7 @@ pub struct Task {
 
 impl fmt::Display for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let check = if self.completed { "✗" } else { "✓" };
+        let check = if self.completed { "✓" } else { "✗" };
         /*
         `self.due_date`는 `&Option<String>` (reference).
         `as_ref()`는 이것을 `Option<&String>` 변환: It “moves the reference inside” the Option.
@@ -26,7 +26,7 @@ impl fmt::Display for Task {
         let due_str = self
             .due_date
             .as_ref()
-            .map(|date| format!("({})", date))
+            .map(|date| format!("(Due: {})", date))
             .unwrap_or_default();
 
         /*
