@@ -32,19 +32,46 @@ impl ToDoList {
     }
 
     pub fn add_task(&mut self, description: String, due_date: Option<String>) -> u32 {
-        todo!("Add a new task")
+        let id = self.next_id;
+        let task = Task::new(id, description, due_date);
+        self.tasks.push(task);
+        self.next_id += 1;
+
+        id
     }
 
     pub fn list_tasks(&self, filter: Option<String>) -> Vec<&Task> {
-        todo!("List tasks with optional filter")
+        self.tasks
+            .iter()
+            .filter(|task| {
+                match filter.as_deref() {
+                    None => true,
+                    Some("completed") => task.completed,
+                    Some("pending") => !task.completed,
+                    Some(_) => true, // Default case for any other filter value
+                }
+            })
+            .collect()
     }
 
     pub fn complete_task(&mut self, id: u32) {
-        todo!("Mark a task as completed")
+        if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
+            task.make_complete();
+        }
+        // self.tasks
+        //     .iter_mut()
+        //     .find(|task| task.id == id)
+        //     .unwrap()
+        //     .make_complete()
     }
 
     pub fn remove_task(&mut self, id: u32) {
-        todo!("Remove a task")
+        if let Some(index) = self.tasks.iter().position(|task| task.id == id) {
+            self.tasks.remove(index);
+            // remove한 후 shift 과정이 필요없이 vector의 마지막 원소와 없앤 원소를 swap하는 식으로 삭제
+            // Order가 중요한 경우 사용하면 안된다.
+            // self.tasks.swap_remove(index);
+        }
     }
 }
 

@@ -50,6 +50,10 @@ impl Task {
             completed: false,
         }
     }
+
+    pub fn make_complete(&mut self) {
+        self.completed = true;
+    }
 }
 
 #[cfg(test)]
