@@ -1,6 +1,8 @@
 use crate::storage::{load_tasks, save_tasks};
 use crate::task::Task;
 
+const TODO_FILE: &str = "src/data/todo.json";
+
 pub struct ToDoList {
     pub tasks: Vec<Task>,
     pub next_id: u32,
@@ -13,22 +15,29 @@ impl ToDoList {
             next_id: 0,
         }
     }
-
-    pub fn load() -> Result<Self, String> {
-        load_tasks().map(|tasks| {
+    pub fn _load(file_name: &str) -> Result<Self, String> {
+        load_tasks(file_name).map(|tasks| {
             let next_id = tasks.last().map(|last| last.id + 1).unwrap_or(0);
             Self { tasks, next_id }
         })
     }
 
-    pub fn save(&self) -> Result<(), String> {
+    pub fn _save(&self, file_name: &str) -> Result<(), String> {
         // &self.tasks는 &Vec<Task> 타입이지만, Rust의 "deref coercion" 때문에 slice reference에 넘길 수 있음.
         // Vec<Task> 는 Deref trait을 구현하므로, [Task]로 deref 될 수 있음.
         // 내부적으로 알아서 deref 연산 &(*vec)을 수행
         // Rust의 타입 시스템은 T가 Deref<Target = U> 를 구현할 경우, &T가 &U로 coerce 되는 것을 허용함
         // The purpose of Deref coercion is to make smart pointer types, like Box, behave as much like the underlying value as possible.
         // Using a Box<Chessboard> is mostly just like using a plain Chessboard, thanks to Deref.
-        save_tasks(&self.tasks)
+        save_tasks(&self.tasks, file_name)
+    }
+
+    pub fn load() -> Result<Self, String> {
+        Self::_load(TODO_FILE)
+    }
+
+    pub fn save(&self) -> Result<(), String> {
+        self._save(TODO_FILE)
     }
 
     pub fn add_task(&mut self, description: String, due_date: Option<String>) -> u32 {
@@ -78,7 +87,8 @@ impl ToDoList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::TODO_FILE;
+    use std::env::temp_dir;
+    use std::path::PathBuf;
 
     #[test]
     fn test_add_task_valid() {
@@ -177,32 +187,56 @@ mod tests {
 
     #[test]
     fn test_save_and_load_success() {
+        let test_file = get_temp_file();
+        let test_path = test_file.to_str().unwrap();
+
         let mut todo_list = ToDoList::new();
         let id = todo_list.add_task(
             "Persistent task".to_string(),
             Some("2023-12-01".to_string()),
         );
-        todo_list.save().expect("Failed to save tasks");
-        let loaded = ToDoList::load().expect("Failed to load tasks");
+
+        todo_list._save(&test_path).expect("Failed to save tasks");
+        let loaded = ToDoList::_load(&test_path).expect("Failed to load tasks");
         let tasks = loaded.list_tasks(None);
         assert_eq!(tasks.len(), 1);
         assert_eq!(tasks[0].id, id);
         assert_eq!(tasks[0].description, "Persistent task");
+
+        // Clean up the temporary file
+        std::fs::remove_file(test_file).ok();
     }
 
     #[test]
     fn test_load_nonexistent_file() {
-        std::fs::remove_file(TODO_FILE).ok(); // Remove file if it exists
-        let result = ToDoList::load();
+        let test_file = get_temp_file();
+        let test_path = test_file.to_str().unwrap();
+
+        std::fs::remove_file(&test_file).ok();
+
+        let result = ToDoList::_load(&test_path);
         assert!(result.is_err()); // Should fail when no file exists
     }
 
     #[test]
     fn test_save_with_no_tasks() {
+        let test_file = get_temp_file();
+        let test_path = test_file.to_str().unwrap();
+
         let todo_list = ToDoList::new();
-        todo_list.save().expect("Failed to save empty list");
-        let loaded = ToDoList::load().expect("Failed to load empty list");
+        todo_list
+            ._save(test_path)
+            .expect("Failed to save empty list");
+        let loaded = ToDoList::_load(test_path).expect("Failed to load empty list");
         let tasks = loaded.list_tasks(None);
         assert!(tasks.is_empty());
+
+        std::fs::remove_file(test_file).ok();
+    }
+
+    fn get_temp_file() -> PathBuf {
+        let mut path = temp_dir();
+        path.push(format!("todo_test_{}.json", rand::random::<u32>()));
+        path
     }
 }
