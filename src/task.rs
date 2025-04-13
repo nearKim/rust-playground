@@ -36,8 +36,14 @@ impl fmt::Display for Task {
         4. 따라서 이 statement가 완료되면, Rust는 임시 String을 할당해제 -> result는 dangling reference
         let result = format!("[{}] {} {}", check, self.description, due_str).trim();
          */
-        let result = format!("[{}] {} {}", check, self.description, due_str);
-        f.write_str(result.trim())
+        // let result = format!("[{}] {} {}", check, self.description, due_str).trim();
+        // let result = format!("[{}] {} {}", check, self.description, due_str);
+        // f.write_str(result.trim())
+        write!(
+            f,
+            "{}",
+            format!("[{}] {} {}", check, self.description, due_str).trim()
+        )
     }
 }
 
